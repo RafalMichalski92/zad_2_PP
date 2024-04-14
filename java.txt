@@ -1,0 +1,117 @@
+package org.example;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class Main {
+
+    private static final HashMap<String, ArrayList<String>> accounts = new HashMap<>();
+    private static JFrame frame;
+    private static JTextField nameText, accountNumberText, balanceText, searchNameText;
+    private static final JLabel balanceLabel = new JLabel("Aktualny balans: ");
+
+    public static void main(String[] args) {
+        // Ustawienie wyglądu GUI
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Tworzenie ramki
+        frame = new JFrame("Bank Account Manager");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(300, 300);
+        frame.setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.Y_AXIS));
+
+        // Dodawanie komponentów
+        addComponents();
+
+        // Wyświetlanie ramki
+        frame.setVisible(true);
+    }
+
+    private static void addComponents() {
+        nameText = new JTextField();
+        accountNumberText = new JTextField();
+        balanceText = new JTextField();
+        searchNameText = new JTextField();
+        frame.add(new JLabel("Imię:"));
+        frame.add(nameText);
+        frame.add(new JLabel("Numer rachunku:"));
+        frame.add(accountNumberText);
+        frame.add(new JLabel("Balans:"));
+        frame.add(balanceText);
+
+        JButton openAccountButton = new JButton("Otwórz konto");
+        openAccountButton.addActionListener(new OpenAccountAction());
+        frame.add(openAccountButton);
+
+        frame.add(balanceLabel);
+
+        frame.add(new JLabel("Wyszukaj imię:"));
+        frame.add(searchNameText);
+
+        JButton searchButton = new JButton("Szukaj");
+        searchButton.addActionListener(new SearchAction());
+        frame.add(searchButton);
+    }
+
+    static class OpenAccountAction implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            // Logika otwierania konta
+            String name = nameText.getText();
+            String accountNumber = accountNumberText.getText();
+            String balance = balanceText.getText();
+
+            if (!name.isEmpty() && !accountNumber.isEmpty() && !balance.isEmpty()) {
+                ArrayList<String> accountDetails = new ArrayList<>();
+                accountDetails.add(accountNumber);
+                accountDetails.add(balance);
+
+                accounts.put(name, accountDetails);
+
+                // Zapis do pliku
+                try {
+                    FileOutputStream fos = new FileOutputStream("accountsData.txt");
+                    ObjectOutputStream oos = new ObjectOutputStream(fos);
+                    oos.writeObject(accounts);
+                    oos.close();
+                    fos.close();
+
+                    // Okienko potwierdzające
+                    JOptionPane.showMessageDialog(frame, "Konto zostało otwarte.");
+
+                    // Czyszczenie pól tekstowych
+                    nameText.setText("");
+                    accountNumberText.setText("");
+                    balanceText.setText("");
+
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+            } else {
+                JOptionPane.showMessageDialog(frame, "Proszę wypełnić wszystkie pola.", "Błąd", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    static class SearchAction implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            // Logika wyszukiwania konta
+            String name = searchNameText.getText();
+
+            if (accounts.containsKey(name)) {
+                ArrayList<String> accountDetails = accounts.get(name);
+                balanceLabel.setText("Dane właściciela: " + name + ", Aktualny balans: " + accountDetails.get(1));
+            }
+
+         else {
+                JOptionPane.showMessageDialog(frame, "Nie znaleziono konta.", "Błąd", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+}
